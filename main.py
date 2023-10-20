@@ -82,7 +82,7 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, 'Укажите цену')
 		del price[message.from_user.id]
 	elif (message.from_user.id in service) and (message.from_user.id in price) and (message.text == 'Правильно') and (f[message.from_user.id] == 'Создать ссылку'):
-		url = f'localhost:3000/pay?price={price[message.from_user.id]}&service={service[message.from_user.id]}'
+		url = f'parcel-usa.ru/pay?price={price[message.from_user.id]}&service={service[message.from_user.id]}'
 		bot.send_message(message.from_user.id, f'[Ссылка на сайт: ]{url}', parse_mode='Markdown')
 		del f[message.from_user.id]
 		del service[message.from_user.id]
