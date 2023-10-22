@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-from aiogram.utils.markdown import hlink
+from urllib.parse import urlencode
 
 bot = telebot.TeleBot('6416356071:AAHZpm96EgbrbyjnDm1DmTnbvZIDKHI-7VU')
 
@@ -93,7 +93,9 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, 'Укажите цену')
 		del price[message.from_user.id]
 	elif (message.from_user.id in service) and (message.from_user.id in price) and (message.text == 'Правильно') and (f[message.from_user.id] == 'Создать ссылку'):
-		url = f'http://parcel-usa.ru/pay?price={price[message.from_user.id]}&service={service[message.from_user.id]}'
+		params = {'price': price[message.from_user.id], 'service': service[message.from_user.id]}
+		queryString = urlencode(params)
+		url = f'http://parcel-usa.ru/pay?{queryString}'
 		bot.send_message(message.from_user.id, f'[Ссылка на сайт: ]{url}', parse_mode='Markdown')
 		del f[message.from_user.id]
 		del service[message.from_user.id]
