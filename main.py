@@ -6,7 +6,10 @@ bot = telebot.TeleBot('6416356071:AAHZpm96EgbrbyjnDm1DmTnbvZIDKHI-7VU')
 
 @bot.message_handler(commands=['start'])
 def start(message):
-
+	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
+		pass
+	else:
+		return
 	markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 	button = types.KeyboardButton("Создать ссылку")
 	button1 = types.KeyboardButton("Изменить политику конфиденциальности")
@@ -28,6 +31,10 @@ flag_ofera = False
 def save_doc(message):
 	global flag_policy
 	global flag_ofera
+	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
+		pass
+	else:
+		return
 	if flag_policy:
 		file_info = bot.get_file(message.document.file_id)
 		downloaded_file = bot.download_file(file_info.file_path)
@@ -48,6 +55,10 @@ def save_doc(message):
 def get_text_messages(message):
 	global flag_policy
 	global flag_ofera
+	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
+		pass
+	else:
+		return
 	if message.text == 'Создать ссылку':
 		f[message.from_user.id] = 'Создать ссылку'
 		bot.send_message(message.from_user.id, 'Укажите услугу')
