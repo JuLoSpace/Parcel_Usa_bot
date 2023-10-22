@@ -38,14 +38,14 @@ def save_doc(message):
 	if flag_policy:
 		file_info = bot.get_file(message.document.file_id)
 		downloaded_file = bot.download_file(file_info.file_path)
-		with open('/Parcel_Usa/public/privacy_policy.docx', 'wb') as new_file:
+		with open('../Parcel_Usa/public/privacy_policy.docx', 'wb') as new_file:
 			new_file.write(downloaded_file)
 		flag_policy = False
 		bot.send_message(message.from_user.id, 'Политика конфиденциальности успешно загружена')
 	elif flag_ofera:
 		file_info = bot.get_file(message.document.file_id)
 		downloaded_file = bot.download_file(file_info.file_path)
-		with open('/Parcel_Usa/public/offer.docx', 'wb') as new_file:
+		with open('../Parcel_Usa/public/offer.docx', 'wb') as new_file:
 			new_file.write(downloaded_file)
 		flag_ofera = False
 		bot.send_message(message.from_user.id, 'Оферта успешно загружена')
