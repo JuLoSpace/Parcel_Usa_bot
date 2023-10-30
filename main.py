@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 from urllib.parse import urlencode
 import os
+import base64
 
 bot = telebot.TeleBot('6416356071:AAHZpm96EgbrbyjnDm1DmTnbvZIDKHI-7VU')
 
@@ -22,7 +23,7 @@ def start(message):
 	markup.add(button3)
 	bot.send_message(message.from_user.id, 'Посылочка USA - управление', reply_markup=markup)
 
-if not os.path.exists('./goods'):
+if not os.path.exists('../Parcel_Usa/public/goods'):
 	os.mkdir('../Parcel_Usa/public/goods')
 	os.mkdir('../Parcel_Usa/public/goods/pictures')
 
@@ -54,14 +55,14 @@ def save_doc(message):
 		file_info = bot.get_file(message.document.file_id)
 		downloaded_file = bot.download_file(file_info.file_path)
 		with open('../Parcel_Usa/public/privacy_policy.docx', 'wb') as new_file:
-			new_file.write(downloaded_file)
+			new_file.write(downloaded_file[1::])
 		flag_policy = False
 		bot.send_message(message.from_user.id, 'Политика конфиденциальности успешно загружена')
 	elif flag_ofera:
 		file_info = bot.get_file(message.document.file_id)
 		downloaded_file = bot.download_file(file_info.file_path)
 		with open('../Parcel_Usa/public/offer.docx', 'wb') as new_file:
-			new_file.write(downloaded_file)
+			new_file.write(downloaded_file[1::])
 		flag_ofera = False
 		bot.send_message(message.from_user.id, 'Оферта успешно загружена')
 
@@ -85,57 +86,58 @@ def get_text_messages(message):
 		f[message.from_user.id] = 'Добавить товар в каталог'
 		bot.send_message(message.from_user.id, 'Укажите класс товара (Кросовки, одежда, очки)')
 	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_class == ''):
-		product_class = message.text
+		product_class = base64.b64encode(message.text.encode('utf-8'))
 		bot.send_message(message.from_user.id, 'Укажите название товара')
 	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_name == ''):
-		product_name = message.text
+		product_name = base64.b64encode(message.text.encode('utf-8'))
 		bot.send_message(message.from_user.id, 'Укажите описание товара')
 	elif f[message.from_user.id] == 'Добавить товар в каталог' and product_info == '':
-		product_info = message.text
+		product_info = base64.b64encode(message.text.encode('utf-8'))
 		bot.send_message(message.from_user.id, 'Готово! Теперь приступим к указанию характеристик товара.')
 		bot.send_message(message.from_user.id, 'Укажи характеристику товара. Например: размер . Когда все характеристики товара будут указаны - нажмите готово')
 	elif message.text == 'Все фотографии добавлены':
 		i = 0
 		while True:
-			if not os.path.isfile(f'./goods/{i}.order'):
+			if not os.path.isfile(f'../Parcel_Usa/public/goods/{i}.order'):
 				break
 			else:
 				i += 1
 		print(product_feature)
 		with open(f'../Parcel_Usa/public/goods/{i}.order', 'w') as order_file:
-			order_file.write(str(product_class))
+			order_file.write(str(product_class)[1::])
 			order_file.write('\n')
-			order_file.write(str(product_name))
+			order_file.write(str(product_name)[1::])
 			order_file.write('\n')
-			order_file.write(str(product_info))
+			order_file.write(str(product_info)[1::])
 			order_file.write('\n')
 			for key, value in product_feature.items():
-				order_file.write(str(key))
+				order_file.write(str(key)[1::])
 				order_file.write('\n')
-				order_file.write(str(value))
+				order_file.write(str(value)[1::])
 				order_file.write('\n')
 		with open(f'../Parcel_Usa/public/goods/{i}_pictures.order', 'w') as order_file:
 			for src in product_pictures:
-				order_file.write(str(src))
+				order_file.write(str(src)[1::])
 				order_file.write('\n')
 		bot.send_message(message.from_user.id, 'Отлично! Каталог обновлен')
+		bot.send_message(message.from_user.id, 'Посылочка USA - управление')
 	elif message.text == 'Все характеристики готовы':
 		product_feauture_boolean = True
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 		button = types.KeyboardButton("Все фотографии добавлены")
 		markup.add(button)
-		bot.send_message(message.from_user.id, 'Все характеристики введены, теперь приступим к фотографиям. Прикладывайте последовательно каждую фотографию, я их запомню. Когда приложете все фотографии - нажмите готово', reply_markup=markup)
+		bot.send_message(message.from_user.id, 'Все характеристики введены, теперь приступим к фотографиям. Прикладывайте последовательно каждую фотографию, я их запомню. Когда приложите все фотографии - нажмите готово', reply_markup=markup)
 	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_info != '') and (product_feauture_boolean == False):
 		if (feauture == ''):
-			feauture = message.text
+			feauture = base64.b64encode(message.text.encode('utf-8'))
 			if (len(product_feature) == 0):
 				bot.send_message(message.from_user.id, 'Первая характеристика готова. Теперь укажи значение этой характеристики. Например: 44')
 			else:
 				bot.send_message(message.from_user.id, 'Характеристика готова. Теперь введите ее значение.')
 		else:
-			product_feature[feauture] = message.text
+			product_feature[feauture] = base64.b64encode(message.text.encode('utf-8'))
 			feauture = ''
-			service[message.from_user.id] = message.text
+			service[message.from_user.id] = base64.b64encode(message.text.encode('utf-8'))
 			markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 			button = types.KeyboardButton("Все характеристики готовы")
 			markup.add(button)
@@ -198,7 +200,7 @@ def get_text_messages(message):
 def get_photo(message: types.Message):
 	i = 0
 	while True:
-		if not os.path.isfile(f'./goods/pictures/pic_{i}.png'):
+		if not os.path.isfile(f'../Parcel_Usa/public/goods/pictures/pic_{i}.png'):
 			break
 		else:
 			i += 1
