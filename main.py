@@ -1,6 +1,7 @@
 import telebot
 from telebot import types
 from urllib.parse import urlencode
+import os
 
 bot = telebot.TeleBot('6416356071:AAHZpm96EgbrbyjnDm1DmTnbvZIDKHI-7VU')
 
@@ -14,11 +15,16 @@ def start(message):
 	button = types.KeyboardButton("Создать ссылку")
 	button1 = types.KeyboardButton("Изменить политику конфиденциальности")
 	button2 = types.KeyboardButton("Изменить оферту")
+	button3 = types.KeyboardButton("Добавить товар в каталог")
 	markup.add(button)
 	markup.add(button1)
 	markup.add(button2)
+	markup.add(button3)
 	bot.send_message(message.from_user.id, 'Посылочка USA - управление', reply_markup=markup)
 
+if not os.path.exists('./goods'):
+	os.mkdir('../Parcel_Usa/public/goods')
+	os.mkdir('../Parcel_Usa/public/goods/pictures')
 
 service = {}
 price = {}
@@ -26,11 +32,20 @@ f = {}
 flag_policy = False
 flag_ofera = False
 
+product_class = ''
+product_name = ''
+product_info = ''
+product_feature = {}
+product_feauture_boolean = False
+feauture = ''
+product_pictures = []
+
 
 @bot.message_handler(content_types=['document'])
 def save_doc(message):
 	global flag_policy
 	global flag_ofera
+
 	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
 		pass
 	else:
@@ -53,13 +68,79 @@ def save_doc(message):
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
+	global product_name
 	global flag_policy
 	global flag_ofera
+	global product_class
+	global product_name
+	global product_info
+	global feauture
+	global product_feauture_boolean
 	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
 		pass
 	else:
 		return
-	if message.text == 'Создать ссылку':
+
+	if message.text == 'Добавить товар в каталог':
+		f[message.from_user.id] = 'Добавить товар в каталог'
+		bot.send_message(message.from_user.id, 'Укажите класс товара (Кросовки, одежда, очки)')
+	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_class == ''):
+		product_class = message.text
+		bot.send_message(message.from_user.id, 'Укажите название товара')
+	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_name == ''):
+		product_name = message.text
+		bot.send_message(message.from_user.id, 'Укажите описание товара')
+	elif f[message.from_user.id] == 'Добавить товар в каталог' and product_info == '':
+		product_info = message.text
+		bot.send_message(message.from_user.id, 'Готово! Теперь приступим к указанию характеристик товара.')
+		bot.send_message(message.from_user.id, 'Укажи характеристику товара. Например: размер . Когда все характеристики товара будут указаны - нажмите готово')
+	elif message.text == 'Все фотографии добавлены':
+		i = 0
+		while True:
+			if not os.path.isfile(f'./goods/{i}.order'):
+				break
+			else:
+				i += 1
+		print(product_feature)
+		with open(f'../Parcel_Usa/public/goods/{i}.order', 'w') as order_file:
+			order_file.write(str(product_class))
+			order_file.write('\n')
+			order_file.write(str(product_name))
+			order_file.write('\n')
+			order_file.write(str(product_info))
+			order_file.write('\n')
+			for key, value in product_feature.items():
+				order_file.write(str(key))
+				order_file.write('\n')
+				order_file.write(str(value))
+				order_file.write('\n')
+		with open(f'../Parcel_Usa/public/goods/{i}_pictures.order', 'w') as order_file:
+			for src in product_pictures:
+				order_file.write(str(src))
+				order_file.write('\n')
+		bot.send_message(message.from_user.id, 'Отлично! Каталог обновлен')
+	elif message.text == 'Все характеристики готовы':
+		product_feauture_boolean = True
+		markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+		button = types.KeyboardButton("Все фотографии добавлены")
+		markup.add(button)
+		bot.send_message(message.from_user.id, 'Все характеристики введены, теперь приступим к фотографиям. Прикладывайте последовательно каждую фотографию, я их запомню. Когда приложете все фотографии - нажмите готово', reply_markup=markup)
+	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_info != '') and (product_feauture_boolean == False):
+		if (feauture == ''):
+			feauture = message.text
+			if (len(product_feature) == 0):
+				bot.send_message(message.from_user.id, 'Первая характеристика готова. Теперь укажи значение этой характеристики. Например: 44')
+			else:
+				bot.send_message(message.from_user.id, 'Характеристика готова. Теперь введите ее значение.')
+		else:
+			product_feature[feauture] = message.text
+			feauture = ''
+			service[message.from_user.id] = message.text
+			markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+			button = types.KeyboardButton("Все характеристики готовы")
+			markup.add(button)
+			bot.send_message(message.from_user.id, 'Отлично. Вводите следующую характеристику или закончите.', reply_markup=markup)
+	elif message.text == 'Создать ссылку':
 		f[message.from_user.id] = 'Создать ссылку'
 		bot.send_message(message.from_user.id, 'Укажите услугу')
 	elif message.text == 'Изменить политику конфиденциальности':
@@ -106,9 +187,28 @@ def get_text_messages(message):
 		button = types.KeyboardButton("Создать ссылку")
 		button1 = types.KeyboardButton("Изменить политику конфиденциальности")
 		button2 = types.KeyboardButton("Изменить оферту")
+		button3 = types.KeyboardButton("Добавить товар в каталог")
 		markup.add(button)
 		markup.add(button1)
 		markup.add(button2)
+		markup.add(button3)
 		bot.send_message(message.from_user.id, 'Посылочка USA - управление', reply_markup=markup)
+
+@bot.message_handler(content_types=['photo'])
+def get_photo(message: types.Message):
+	i = 0
+	while True:
+		if not os.path.isfile(f'./goods/pictures/pic_{i}.png'):
+			break
+		else:
+			i += 1
+	photo = message.photo[-1]
+	file_info = bot.get_file(photo.file_id)
+	downloaded_file = bot.download_file(file_info.file_path)
+	save_path = f'../Parcel_Usa/public/goods/pictures/pic_{i}.png'
+	with open(save_path, 'wb') as new_file:
+		new_file.write(downloaded_file)
+	product_pictures.append(save_path)
+	bot.reply_to(message, 'Загрузил! Прикрепляй следующее фото или нажми готово')
 
 bot.polling(none_stop=True, interval=0)
