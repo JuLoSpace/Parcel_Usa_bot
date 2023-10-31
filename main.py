@@ -3,8 +3,41 @@ from telebot import types
 from urllib.parse import urlencode
 import os
 import base64
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+scope = ['https://spreadsheets.google.com/feeds', \
+       'https://www.googleapis.com/auth/drive']
+
+creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json', scope)
+client = gspread.authorize(creds)
+
+sheetName = '1ZB-NZBQLMI1bPiwYpUMffJN4s1cwiBgSaZ_TFKiUeBQ'
+
 
 bot = telebot.TeleBot('6416356071:AAHZpm96EgbrbyjnDm1DmTnbvZIDKHI-7VU')
+sheet = client.open_by_key(sheetName)
+
+def add_order_to_google_table(category, features, images):
+	try:
+		worksheet = sheet.worksheet(base64.b64decode(category.decode('utf-8')).decode('utf-8'))
+	except:
+		worksheet = sheet.add_worksheet(title=base64.b64decode(category.decode('utf-8')).decode('utf-8'), rows=100, cols=20)
+	len_col = len(worksheet.col_values(1))
+	if (len_col < 1):
+		i = 0
+		for key, value in features.items():
+			worksheet.update(f'{chr(65+i)}1', base64.b64decode(key.decode('utf-8')).decode('utf-8'))
+			i += 1
+	keys_list = worksheet.row_values(1)
+	for key, value in features.items():
+		for i in range(len(keys_list)):
+			if (base64.b64decode(key.decode('utf-8')).decode('utf-8') == keys_list[i]):
+				worksheet.update(f'{chr(65+i)}{len_col+1}', base64.b64decode(value.decode('utf-8')).decode('utf-8'))
+	for i in range(len(images)):
+		urli = f'=IMAGE("{images[i]}")'
+		print(urli)
+		worksheet.update(f'{chr(65+i+len(keys_list))}{len_col+1}', urli, value_input_option='USER_ENTERED')
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -88,7 +121,7 @@ def get_text_messages(message):
 
 	if message.text == 'Добавить товар в каталог':
 		f[message.from_user.id] = 'Добавить товар в каталог'
-		bot.send_message(message.from_user.id, 'Укажите класс товара (Кросовки, одежда, очки)')
+		bot.send_message(message.from_user.id, 'Укажите класс товара (Кроссовки, одежда, очки)')
 	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_class == ''):
 		product_class = base64.b64encode(message.text.encode('utf-8'))
 		bot.send_message(message.from_user.id, 'Укажите название товара')
@@ -109,7 +142,6 @@ def get_text_messages(message):
 				break
 			else:
 				i += 1
-		print(product_feature)
 		with open(f'../Parcel_Usa/public/goods/{i}.order', 'w') as order_file:
 			order_file.write(str(product_class)[1::])
 			order_file.write('\n')
@@ -130,6 +162,10 @@ def get_text_messages(message):
 				order_file.write('\n')
 		bot.send_message(message.from_user.id, 'Отлично! Каталог обновлен')
 		bot.send_message(message.from_user.id, 'Посылочка USA - управление')
+		product_feature[base64.b64encode('Цена'.encode('utf-8'))] = product_price
+		product_feature[base64.b64encode('Модель'.encode('utf-8'))] = product_name
+		product_feature[base64.b64encode('Информация'.encode('utf-8'))] = product_info
+		add_order_to_google_table(product_class, product_feature, product_pictures)
 		f[message.from_user.id] = ''
 		product_class = ''
 		product_name = ''
