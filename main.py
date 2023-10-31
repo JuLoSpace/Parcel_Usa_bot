@@ -40,6 +40,7 @@ product_feature = {}
 product_feauture_boolean = False
 feauture = ''
 product_pictures = []
+product_price = 0
 
 
 @bot.message_handler(content_types=['document'])
@@ -77,6 +78,9 @@ def get_text_messages(message):
 	global product_info
 	global feauture
 	global product_feauture_boolean
+	global product_feature
+	global product_pictures
+	global product_price
 	if (message.from_user.username == "Victor_Pestov" or message.from_user.username == "yaroslavesolovievs"):
 		pass
 	else:
@@ -93,6 +97,9 @@ def get_text_messages(message):
 		bot.send_message(message.from_user.id, 'Укажите описание товара')
 	elif f[message.from_user.id] == 'Добавить товар в каталог' and product_info == '':
 		product_info = base64.b64encode(message.text.encode('utf-8'))
+		bot.send_message(message.from_user.id, 'Укажите цену товара')
+	elif f[message.from_user.id] == 'Добавить товар в каталог' and product_price == 0:
+		product_price = base64.b64encode(message.text.encode('utf-8'))
 		bot.send_message(message.from_user.id, 'Готово! Теперь приступим к указанию характеристик товара.')
 		bot.send_message(message.from_user.id, 'Укажи характеристику товара. Например: размер . Когда все характеристики товара будут указаны - нажмите готово')
 	elif message.text == 'Все фотографии добавлены':
@@ -110,6 +117,8 @@ def get_text_messages(message):
 			order_file.write('\n')
 			order_file.write(str(product_info)[1::])
 			order_file.write('\n')
+			order_file.write(str(product_price)[1::])
+			order_file.write('\n')
 			for key, value in product_feature.items():
 				order_file.write(str(key)[1::])
 				order_file.write('\n')
@@ -117,17 +126,26 @@ def get_text_messages(message):
 				order_file.write('\n')
 		with open(f'../Parcel_Usa/public/goods/{i}_pictures.order', 'w') as order_file:
 			for src in product_pictures:
-				order_file.write(str(src)[1::])
+				order_file.write(str(src))
 				order_file.write('\n')
 		bot.send_message(message.from_user.id, 'Отлично! Каталог обновлен')
 		bot.send_message(message.from_user.id, 'Посылочка USA - управление')
+		f[message.from_user.id] = ''
+		product_class = ''
+		product_name = ''
+		product_info = ''
+		product_feature = {}
+		product_feauture_boolean = False
+		feauture = ''
+		product_pictures = []
+		product_price = 0
 	elif message.text == 'Все характеристики готовы':
 		product_feauture_boolean = True
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 		button = types.KeyboardButton("Все фотографии добавлены")
 		markup.add(button)
 		bot.send_message(message.from_user.id, 'Все характеристики введены, теперь приступим к фотографиям. Прикладывайте последовательно каждую фотографию, я их запомню. Когда приложите все фотографии - нажмите готово', reply_markup=markup)
-	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_info != '') and (product_feauture_boolean == False):
+	elif (f[message.from_user.id] == 'Добавить товар в каталог') and (product_price != 0) and (product_feauture_boolean == False):
 		if (feauture == ''):
 			feauture = base64.b64encode(message.text.encode('utf-8'))
 			if (len(product_feature) == 0):
@@ -210,7 +228,7 @@ def get_photo(message: types.Message):
 	save_path = f'../Parcel_Usa/public/goods/pictures/pic_{i}.png'
 	with open(save_path, 'wb') as new_file:
 		new_file.write(downloaded_file)
-	product_pictures.append(save_path)
+	product_pictures.append(f'http://10.100.20.21/goods/pictures/pic_{i}.png')
 	bot.reply_to(message, 'Загрузил! Прикрепляй следующее фото или нажми готово')
 
 bot.polling(none_stop=True, interval=0)
